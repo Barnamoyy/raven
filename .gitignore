@@ -39,6 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+server/uploaded_pcapng_files
 
 # Ignore Python cache files
 __pycache__/
