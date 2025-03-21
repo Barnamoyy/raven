@@ -24,8 +24,8 @@ async def upload_pcapng(file: UploadFile = File(...), db: Session = Depends(get_
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    # file_data = schema.PcapngFileCreate(filename=file.filename)
-    # stored_file = crud.create_pcapng_file(db, file_data)
+    file_data = schema.PcapngFileCreate(filename=file.filename)
+    stored_file = crud.create_pcapng_file(db, file_data)
     
     packets = rdpcap(str(file_path)) # Run scapy to extract packets
 
