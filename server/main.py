@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from routes import router as main_router
 import redis.asyncio as redis
-from storage_service import model, database
+import database
+from storage_service import model
 from routes import router as storage_router
 import os
 

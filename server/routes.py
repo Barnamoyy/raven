@@ -5,7 +5,7 @@ from pcapkit import extract
 from scapy.all import rdpcap
 import shutil
 from pathlib import Path
-from storage_service.database import get_db
+from database import get_db
 from storage_service import crud, schema
 
 router = APIRouter(prefix="/storage", tags=["Storage"])

@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy import Column, String, Integer, Boolean, DateTime
 from sqlalchemy.sql import func
-from .database import Base  # ✅ Using relative import
+from database import Base  # ✅ Using relative import
 
 class PcapngFile(Base):
     __tablename__ = "pcapng_storage"
