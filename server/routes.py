@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from database import get_db
 from storage_service import crud, schema
+from packet_extract_service.crud import extract_and_store_packets
 
 router = APIRouter(prefix="/storage", tags=["Storage"])
 
@@ -28,7 +29,14 @@ async def upload_pcapng(file: UploadFile = File(...), db: Session = Depends(get_
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
+    try:
+        # Extract and store packets
+        extract_and_store_packets(file_path, stored_file["id"], db)  # ✅ Now it works!
 
+        print(f"Packets extracted and stored for {file.filename}")
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
     return stored_file
 
