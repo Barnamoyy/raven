@@ -1,5 +1,5 @@
 # dependencies 
-from fastapi import APIRouter, Depends, UploadFile, File,HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File,HTTPException, Form
 from sqlalchemy.orm import Session
 from scapy.all import rdpcap
 import shutil
@@ -29,12 +29,12 @@ UPLOAD_DIR = Path("uploaded_pcapng_files")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 @router.post("/upload/")
-async def upload_pcapng(file: UploadFile = File(...), db: Session = Depends(get_db),background_tasks: BackgroundTasks = BackgroundTasks()):
+async def upload_pcapng(file: UploadFile = File(...), user_id: str = Form(...), db: Session = Depends(get_db),background_tasks: BackgroundTasks = BackgroundTasks()):
     file_path = UPLOAD_DIR / file.filename
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
-    file_data = schema.PcapngFileCreate(filename=file.filename)
+    file_data = schema.PcapngFileCreate(user_id = user_id, filename=file.filename)
     stored_file = crud.create_pcapng_file(db, file_data)
     
     packets = rdpcap(str(file_path)) # Run scapy to extract packets
