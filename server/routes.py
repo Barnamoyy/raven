@@ -37,15 +37,6 @@ async def upload_pcapng(file: UploadFile = File(...), db: Session = Depends(get_
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-    # try:
-    #     # Extract and store packets
-    #     extract_and_store_packets(file_path, stored_file["id"], db)
-
-    #     print(f"Packets extracted and stored for {file.filename}")
-
-    # except ValueError as e:
-    #     raise HTTPException(status_code=400, detail=str(e))
-    
     try:
         pattern_analysis = advanced_pattern_detection(file_path,packets)
         print("Pattern analysis completed")        
