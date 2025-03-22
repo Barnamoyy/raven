@@ -15,6 +15,11 @@ from analysis_service.network_analysis.crud import analyze_network_congestion
 from analysis_service.pattern_detection.crud import advanced_pattern_detection
 from analysis_service.pattern_anomalies.crud import detect_mqtt_patterns_anomalies
 from latency_analysis_service.crud import calculate_average_latency
+from packet_extract_service.crud import extract_and_store_packets, parallel_extract_and_store
+import numpy as np
+from sklearn.cluster import KMeans  # ✅ Correct
+from fastapi import BackgroundTasks
+
 
 
 
@@ -24,16 +29,30 @@ UPLOAD_DIR = Path("uploaded_pcapng_files")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 @router.post("/upload/")
-async def upload_pcapng(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_pcapng(file: UploadFile = File(...), db: Session = Depends(get_db),background_tasks: BackgroundTasks = BackgroundTasks()):
     file_path = UPLOAD_DIR / file.filename
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+        
+    file_data = schema.PcapngFileCreate(filename=file.filename)
+    stored_file = crud.create_pcapng_file(db, file_data)
     
     packets = rdpcap(str(file_path)) # Run scapy to extract packets
+    
     
     try:
         avg_latency = calculate_average_latency(file_path,packets)    
         print(f"Average latency: {avg_latency}")    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    try:
+        # Extract and store packets
+      background_tasks.add_task(parallel_extract_and_store, file_path, stored_file["id"], db, 3000, 8)
+
+
+      print(f"Packets extracted and stored for {file.filename}")
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
