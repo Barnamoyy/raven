@@ -22,6 +22,7 @@ from analysis_service.pattern_anomalies.crud import detect_mqtt_patterns_anomali
 from latency_analysis_service.crud import calculate_average_latency
 from packet_extract_service.crud import extract_and_store_packets_optimized
 from analysis_storage.schema import AnalysisResults
+from analysis_storage.crud import create_analysis_result
 import time
 
 router = APIRouter(prefix="/storage", tags=["Storage"])
@@ -63,17 +64,17 @@ async def upload_pcapng(
         raise HTTPException(status_code=400, detail=str(e))
 
     # Store analysis results in DB
-    # analysis_results = AnalysisResults(
-    #     pcapng_id=stored_file.id,
-    #     average_latency=avg_latency,
-    #     pattern_analysis=pattern_analysis,
-    #     mqtt_analysis=mqtt_analysis,
-    #     congestion_analysis=congestion_analysis,
-    #     tcp_window_analysis=tcp_window_analysis,
-    #     delay_analysis=delay_categorization,
-    # )
+    analysis_results = AnalysisResults(
+        pcapng_id=stored_file["id"],
+        average_latency=avg_latency,
+        pattern_analysis=pattern_analysis,
+        mqtt_analysis=mqtt_analysis,
+        congestion_analysis=congestion_analysis,
+        tcp_window_analysis=tcp_window_analysis,
+        delay_analysis=delay_categorization,
+    )
 
-    # crud.create_analysis_result(db, analysis_results)
+    create_analysis_result(db, analysis_results)
 
     # Background Task: Store extracted packets in DB
     background_tasks.add_task(

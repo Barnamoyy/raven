@@ -1,17 +1,15 @@
-from sqlalchemy import Column, Integer, Float, JSON, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, Float, JSON, ForeignKey, String
+import uuid 
+from database import Base 
 
-Base = declarative_base()
 
 
 class AnalysisResultsDB(Base):
     __tablename__ = "analysis_results"
 
-    id = Column(Integer, primary_key=True, index=True)
-    pcapng_id = Column(
-        Integer, ForeignKey("pcapng_files.id"), nullable=False
-    )  # Linking to PCAPNG file
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    pcapng_id = Column(String, ForeignKey("pcapng_storage.id"), nullable=False)  # Links to uploaded file
+ # Linking to PCAPNG file
     average_latency = Column(Float, nullable=True)
     pattern_analysis = Column(JSON, nullable=True)
     mqtt_analysis = Column(JSON, nullable=True)
@@ -19,5 +17,3 @@ class AnalysisResultsDB(Base):
     tcp_window_analysis = Column(JSON, nullable=True)
     delay_analysis = Column(JSON, nullable=True)
 
-    # Relationship (Assuming a PCAPNGFile model exists)
-    pcapng_file = relationship("PCAPNGFile", back_populates="analysis_results")

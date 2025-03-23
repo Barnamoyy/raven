@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from crud import AnalysisResultsDB
-from crud import AnalysisResults
+from .model import AnalysisResultsDB
+from .schema import AnalysisResults
 
 
 def create_analysis_result(db: Session, analysis_data: AnalysisResults):
