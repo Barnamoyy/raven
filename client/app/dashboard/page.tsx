@@ -1,10 +1,7 @@
 import { DataTable } from "@/components/data-table";
 import SectionCard from "@/components/section-card";
 
-
 import data from "./data.json";
-
-import LatencyTimePlot from "@/components/charts/ltplot";
 
 export default function Page() {
   return (
@@ -39,9 +36,7 @@ export default function Page() {
           description="Total average latency less"
         />
       </div>
-      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min">
-      <LatencyTimePlot />
-      </div>
+      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min"></div>
       <DataTable data={data} />
     </div>
   );
