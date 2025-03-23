@@ -669,7 +669,6 @@ def analyze_packet_delays(file_path, packets):
         # Combine results
         results = {
             "summary": summary,
-            "packet_delays": packet_delays,
         }
 
         return results

@@ -93,12 +93,6 @@ def detect_network_patterns_anomalies(file_path: Path, packets: PacketList):
         "packet_count": len(analyzed_packets),
         "protocol_distribution": dict(protocols),
         "flows": len(flows),
-        "delay_categories": {
-            "bundling_delays": [],
-            "processing_delays": [],
-            "transmission_delays": [],
-            "retransmissions": [],
-        },
         "patterns": {
             "periodic_transmissions": [],
             "bursty_traffic": [],
@@ -134,19 +128,6 @@ def detect_network_patterns_anomalies(file_path: Path, packets: PacketList):
                     packets[i]["is_retransmission"] = True
                     retransmission_delay = (
                         pkt["time"] - packets[seq_seen[pkt["seq"]]]["time"]
-                    )
-
-                    results["delay_categories"]["retransmissions"].append(
-                        {
-                            "flow": flow_id,
-                            "packet_index": pkt["index"],
-                            "original_index": seq_seen[pkt["seq"]],
-                            "delay": retransmission_delay,
-                            "protocol": pkt["protocol"],
-                            "size": pkt["size"],
-                            "src_ip": pkt["src_ip"],
-                            "dst_ip": pkt["dst_ip"],
-                        }
                     )
 
                     # Record for root cause analysis
@@ -250,50 +231,6 @@ def detect_network_patterns_anomalies(file_path: Path, packets: PacketList):
                             "protocol": packets[0]["protocol"],
                             "src_ip": packets[0]["src_ip"],
                             "dst_ip": packets[0]["dst_ip"],
-                        }
-                    )
-
-        # Identify bundling delays (small packets followed by larger ones)
-        for i in range(len(packets) - 1):
-            # Look for small packet followed by larger one after a delay
-            if (
-                packets[i]["size"] < 100
-                and packets[i + 1]["size"] > 300
-                and delays[i] > 0.05
-            ):
-                results["delay_categories"]["bundling_delays"].append(
-                    {
-                        "flow": flow_id,
-                        "start_packet": packets[i]["index"],
-                        "end_packet": packets[i + 1]["index"],
-                        "delay": delays[i],
-                        "size_ratio": packets[i + 1]["size"] / packets[i]["size"],
-                        "protocol": packets[i]["protocol"],
-                        "src_ip": packets[i]["src_ip"],
-                        "dst_ip": packets[i]["dst_ip"],
-                    }
-                )
-
-        # Identify processing delays (request-response patterns)
-        for i in range(len(packets) - 1):
-            # For simplicity, look for alternating patterns of non-ACK packets
-            if (
-                i < len(packets) - 2
-                and not packets[i]["is_ack"]
-                and packets[i + 1]["is_ack"]
-                and not packets[i + 2]["is_ack"]
-            ):
-                processing_delay = packets[i + 2]["time"] - packets[i]["time"]
-                if 0.001 < processing_delay < 1.0:  # Reasonable processing delay range
-                    results["delay_categories"]["processing_delays"].append(
-                        {
-                            "flow": flow_id,
-                            "request_packet": packets[i]["index"],
-                            "response_packet": packets[i + 2]["index"],
-                            "delay": processing_delay,
-                            "protocol": packets[i]["protocol"],
-                            "src_ip": packets[i]["src_ip"],
-                            "dst_ip": packets[i]["dst_ip"],
                         }
                     )
 
@@ -458,26 +395,24 @@ def detect_network_patterns_anomalies(file_path: Path, packets: PacketList):
             k: v for k, v in sorted_ports[:10]  # Limit to top 10 for clarity
         }
 
+    # Compute statistics for different types of events for the summary
+    retransmission_count = 0
+    bundling_count = 0
+    processing_count = 0
+    transmission_count = 0
+
+    # We'll need to count these differently since we removed packet_delays
+    for flow_id, packets in flows.items():
+        for packet in packets:
+            if packet["is_retransmission"]:
+                retransmission_count += 1
+
     # Add summary statistics
     results["summary"] = {
         "total_packets": len(analyzed_packets),
         "total_flows": len(flows),
         "protocol_distribution": protocols,
-        "avg_bundling_delay": (
-            np.mean(
-                [d["delay"] for d in results["delay_categories"]["bundling_delays"]]
-            )
-            if results["delay_categories"]["bundling_delays"]
-            else 0
-        ),
-        "avg_processing_delay": (
-            np.mean(
-                [d["delay"] for d in results["delay_categories"]["processing_delays"]]
-            )
-            if results["delay_categories"]["processing_delays"]
-            else 0
-        ),
-        "retransmission_count": len(results["delay_categories"]["retransmissions"]),
+        "retransmission_count": retransmission_count,
         "periodic_flow_count": len(results["patterns"]["periodic_transmissions"]),
         "bursty_flow_count": len(results["patterns"]["bursty_traffic"]),
         "anomaly_count": len(results["anomalies"]["irregular_delays"])
