@@ -1,6 +1,9 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from . import model, schema
 from datetime import datetime
+from .model import PcapngFile
+from analysis_storage.model import AnalysisResultsDB
 
 def create_pcapng_file(db: Session, file_data: schema.PcapngFileCreate):
     new_file = model.PcapngFile(
@@ -20,4 +23,20 @@ def create_pcapng_file(db: Session, file_data: schema.PcapngFileCreate):
     }
 
 def get_pcapng_files(db: Session):
-    return db.query(model.PcapngFile).all()
+    return db.query(PcapngFile).all()
+
+def get_latest_pcapng_files(user_id: str, db: Session): 
+    latest_pcapng = (
+        db.query(PcapngFile)
+        .filter(PcapngFile.user_id == user_id)
+        .order_by(PcapngFile.upload_timestamp.desc())
+        .first()
+    )
+
+    if not latest_pcapng:
+        raise HTTPException(status_code=404, detail="No PCAPNG files found for this user.")
+
+    latest_analysis = db.query(AnalysisResultsDB).filter(AnalysisResultsDB.pcapng_id == latest_pcapng.id).first()
+    if not latest_analysis:
+        raise HTTPException(status_code=404, detail="No analysis results found for this PCAPNG file.")
+    return latest_analysis

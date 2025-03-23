@@ -23,6 +23,7 @@ from latency_analysis_service.crud import calculate_average_latency
 from packet_extract_service.crud import extract_and_store_packets_optimized
 from analysis_storage.schema import AnalysisResults
 from analysis_storage.crud import create_analysis_result, get_analysis_by_pcapng
+from storage_service.crud import get_latest_pcapng_files
 import time
 
 router = APIRouter(prefix="/storage", tags=["Storage"])
@@ -112,3 +113,8 @@ def get_analysis_results(pcapng_id: str, db: Session = Depends(get_db)):
 async def list_pcapng_files(db: Session = Depends(get_db)):
     """Lists all uploaded PCAPNG files."""
     return crud.get_pcapng_files(db)
+
+@router.get("/latest/{user_id}")
+def get_latest_pcapng(user_id: str, db: Session = Depends(get_db)):
+    """Fetches the latest uploaded PCAPNG file for a specific user."""
+    return get_latest_pcapng_files(user_id, db)
