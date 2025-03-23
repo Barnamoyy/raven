@@ -63,32 +63,38 @@ async def upload_pcapng(
         raise HTTPException(status_code=400, detail=str(e))
 
     # Store analysis results in DB
-    analysis_results = AnalysisResults(
-        pcapng_id=stored_file.id,
-        average_latency=avg_latency,
-        pattern_analysis=pattern_analysis,
-        mqtt_analysis=mqtt_analysis,
-        congestion_analysis=congestion_analysis,
-        tcp_window_analysis=tcp_window_analysis,
-        delay_analysis=delay_categorization,
-    )
+    # analysis_results = AnalysisResults(
+    #     pcapng_id=stored_file.id,
+    #     average_latency=avg_latency,
+    #     pattern_analysis=pattern_analysis,
+    #     mqtt_analysis=mqtt_analysis,
+    #     congestion_analysis=congestion_analysis,
+    #     tcp_window_analysis=tcp_window_analysis,
+    #     delay_analysis=delay_categorization,
+    # )
 
-    crud.create_analysis_result(db, analysis_results)
+    # crud.create_analysis_result(db, analysis_results)
 
     # Background Task: Store extracted packets in DB
     background_tasks.add_task(
         extract_and_store_packets_optimized,
         file_path,
-        stored_file.id,
+        stored_file["id"],
         db,
         3000,
-        8,
     )
 
     return {
         "message": "PCAPNG file uploaded successfully",
-        "pcapng_id": stored_file.id,
-        "analysis_results": analysis_results.dict(),
+        "pcapng_id": stored_file["id"],
+        "analysis_results": {
+            "avg_latency": avg_latency,
+            "pattern_analysis": pattern_analysis,
+            "mqtt_analysis": mqtt_analysis,
+            "congestion_analysis": congestion_analysis,
+            "tcp_window_analysis": tcp_window_analysis,
+            "delay_categorization": delay_categorization,
+        },
     }
 
 
