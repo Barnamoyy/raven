@@ -637,35 +637,6 @@ def analyze_packet_delays(file_path, packets):
                 ]["packet_id"].tolist()
                 broker_packets.update(broker_affected)
 
-            # Create packet delay entries with category
-            for idx, row in analyzer.df.iterrows():
-                packet_id = row["packet_id"]
-
-                # Determine delay categories
-                categories = []
-                if packet_id in bundling_packets:
-                    categories.append("bundling_delay")
-                if packet_id in retransmission_packets:
-                    categories.append("retransmission_delay")
-                if packet_id in congestion_packets:
-                    categories.append("network_congestion")
-                if packet_id in jitter_packets:
-                    categories.append("jitter")
-                if packet_id in broker_packets:
-                    categories.append("broker_processing_delay")
-
-                if not categories:
-                    categories.append("normal")
-
-                packet_delays.append(
-                    {
-                        "packet_index": packet_id,
-                        "timestamp": row["timestamp"],
-                        "delay": row["delay"],
-                        "category": categories,
-                    }
-                )
-
         # Combine results
         results = {
             "summary": summary,
