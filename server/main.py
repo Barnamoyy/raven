@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from routes import router as main_router
+from fastapi.middleware.cors import CORSMiddleware
 import redis.asyncio as redis
 import database
 from storage_service import model
@@ -7,6 +8,14 @@ from routes import router as storage_router
 import os
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # ✅ Allow frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],  # ✅ Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # ✅ Allow all headers
+)
 
 # Redis Connection
 REDIS_URL = "redis://localhost:6379"
