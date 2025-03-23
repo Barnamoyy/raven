@@ -4,8 +4,7 @@ import SectionCard from "@/components/section-card";
 
 import { useDataStore } from "@/store/useDataStore";
 
-import { PacketDataTable } from "@/components/table.tsx/packet-data-table"
-import { packets } from "@/components/data/packets"
+import { PacketDataTable } from "@/components/table.tsx/packet-data-table";
 import Dashboard from "@/components/charts/ltchart";
 
 export default function Page() {
@@ -13,10 +12,11 @@ export default function Page() {
 
   const analysis_data = latest;
 
-  const summary = analysis_data?.analysis_results?.delay_categorization?.summary 
-  const table_data = analysis_data?.analysis_results?.congestion_analysis?.packet_flow
-  console.log(analysis_data)
-
+  const summary =
+    analysis_data?.analysis_results?.delay_categorization?.summary;
+  const table_data =
+    analysis_data?.analysis_results?.congestion_analysis?.packet_flow;
+  console.log(analysis_data);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
@@ -58,13 +58,12 @@ export default function Page() {
           <Dashboard analysisResults={analysis_data.analysis_results} />
         )}
       </div>
-        {table_data && (
-          <div className="bg-muted/50 rounded-xl p-4">
-            <PacketDataTable data={table_data} />
-          </div>
-        )}
-      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min">
-      </div>
+      {table_data && (
+        <div className="bg-muted/50 rounded-xl p-4">
+          <PacketDataTable data={table_data} />
+        </div>
+      )}
+      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min"></div>
     </div>
   );
 }

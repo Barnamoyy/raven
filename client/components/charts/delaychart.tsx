@@ -10,7 +10,14 @@ import {
   BarElement,
 } from "chart.js";
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
+);
 
 interface DelayAnalysisProps {
   responseData: any;
@@ -44,18 +51,12 @@ const DelayAnalysis: React.FC<DelayAnalysisProps> = ({ responseData }) => {
             "#03A9F4", // Light Blue
             "#9C27B0", // Purple
           ],
-          borderColor: [
-            "#388E3C",
-            "#FFA000",
-            "#E64A19",
-            "#0288D1",
-            "#7B1FA2",
-          ],
+          borderColor: ["#388E3C", "#FFA000", "#E64A19", "#0288D1", "#7B1FA2"],
           borderWidth: 1,
         },
       ],
     });
-  
+
     // Prepare bar chart data using delay statistics
     const barLabels = Object.keys(delayStats);
     const barValues = Object.values(delayStats);
@@ -72,13 +73,14 @@ const DelayAnalysis: React.FC<DelayAnalysisProps> = ({ responseData }) => {
   }, [responseData]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center p-8">
-      <h1 className="text-4xl font-bold mb-8 text-gray-800">Hackathon Delay Analysis</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4 text-center">Delay Categories</h2>
+    <div className="align-middle w-full bg-gray-50 flex flex-col items-center p-8">
+      <div className="grid  grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl">
+        <div className="bg-white rounded-lg shadow-lg p-6  flex  flex-col justify-center items-center w-full">
+          <h2 className="text-2xl font-semibold mb-4 text-center">
+            Delay Categories
+          </h2>
           {pieData?.labels && (
-            <div className="relative h-72">
+            <div className="relative mx-auto justify-center items-center   h-72">
               <Pie data={pieData} options={{ maintainAspectRatio: false }} />
             </div>
           )}

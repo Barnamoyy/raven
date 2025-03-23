@@ -1,36 +1,23 @@
 "use client";
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo } from "react";
 import ReactFlow, {
   Background,
   Controls,
-  addEdge,
-  useNodesState,
-  useEdgesState,
   Node,
   Edge,
   Handle,
   Position,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { motion } from "framer-motion";
-
 import { useDataStore } from "@/store/useDataStore";
 
 // -----------------------------------------------------------------
-// Sample packet data; replace this with your actual analysis data
+// Custom Node Component: StarNode (ignores the id prop)
 // -----------------------------------------------------------------
-
-// -----------------------------------------------------------------
-// Custom Node Component: StarNode
-// A round node with a floating IP label and connection handles
-// -----------------------------------------------------------------
-const StarNode = ({ id, data }: { id: string; data: any }) => {
+const StarNode = ({ data }: { data: any }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
+    <div
       style={{
         width: 80,
         height: 80,
@@ -47,7 +34,6 @@ const StarNode = ({ id, data }: { id: string; data: any }) => {
       }}
     >
       {data.label}
-      {/* Connection Handles */}
       <Handle
         type="source"
         position={Position.Right}
@@ -58,49 +44,39 @@ const StarNode = ({ id, data }: { id: string; data: any }) => {
         position={Position.Left}
         style={{ background: "#555", width: 10, height: 10 }}
       />
-    </motion.div>
+    </div>
   );
 };
 
-// Register our custom node type
-const nodeTypes = {
-  starNode: StarNode,
-};
+const nodeTypes = { starNode: StarNode };
 
-// -----------------------------------------------------------------
-// Main Page Component
-// -----------------------------------------------------------------
 export default function Page() {
   const { latest } = useDataStore();
 
-  const analysis = latest?.analysis_results?.congestion_analysis?.packet_flow;
+  // Always call hooks in the same order.
+  const analysis =
+    latest?.analysis_results?.congestion_analysis?.packet_flow || [];
 
-  const packetFlow = analysis
-  ?.map((item: any) => ({
-    source_ip: item.src_ip,
-    destination_ip: item.dst_ip,
-  }))
-  .filter((packet:any) => packet.source_ip !== packet.destination_ip);
+  const packetFlow = useMemo(() => {
+    return analysis
+      .map((item: any) => ({
+        source_ip: item.src_ip,
+        destination_ip: item.dst_ip,
+      }))
+      .filter((packet: any) => packet.source_ip !== packet.destination_ip);
+  }, [analysis]);
 
-  console.log(packetFlow)
-
-  // -----------------------------------------------------------------
-  // 1. Compute unique nodes and record out-degree for each source IP
-  // Provide a default position to satisfy Node type requirements.
-  // -----------------------------------------------------------------
-
+  // Compute unique nodes and determine center node.
   const { nodesArray, centerNodeId } = useMemo(() => {
     const nodeMap = new Map<string, Node>();
     const outDegree = new Map<string, number>();
 
-    packetFlow?.forEach((packet: any) => {
-      // Increase out-degree for source IP
+    packetFlow.forEach((packet: any) => {
       outDegree.set(
         packet.source_ip,
         (outDegree.get(packet.source_ip) || 0) + 1
       );
 
-      // Add source IP node if it doesn't exist
       if (!nodeMap.has(packet.source_ip)) {
         nodeMap.set(packet.source_ip, {
           id: packet.source_ip,
@@ -109,7 +85,6 @@ export default function Page() {
         });
       }
 
-      // Add destination IP node if it doesn't exist
       if (!nodeMap.has(packet.destination_ip)) {
         nodeMap.set(packet.destination_ip, {
           id: packet.destination_ip,
@@ -119,7 +94,6 @@ export default function Page() {
       }
     });
 
-    // Determine the central node (node with highest out-degree)
     let maxDegree = -1;
     let centerId: string | undefined = undefined;
     outDegree.forEach((degree, ip) => {
@@ -129,7 +103,6 @@ export default function Page() {
       }
     });
 
-    // Fallback: if no center found, use the first node from the map
     if (!centerId) {
       centerId = nodeMap.keys().next().value;
     }
@@ -138,30 +111,22 @@ export default function Page() {
       nodesArray: Array.from(nodeMap.values()),
       centerNodeId: centerId as string,
     };
-  }, []);
+  }, [packetFlow]);
 
-  // -----------------------------------------------------------------
-  // 2. Arrange nodes in a star layout
-  // Central node is positioned at the canvas center,
-  // and all other nodes are distributed evenly in a circle.
-  // -----------------------------------------------------------------
+  // Arrange nodes in a star layout.
   const positionedNodes = useMemo((): Node[] => {
     const centerX = 400;
     const centerY = 300;
     const radius = 200;
+    const updatedNodes = nodesArray.map((n) => ({ ...n }));
 
-    // Create a copy of the nodesArray
-    const updatedNodes = nodesArray.map((node) => ({ ...node }));
-
-    // Position the central node at the center of the canvas
     updatedNodes.forEach((node) => {
       if (node.id === centerNodeId) {
         node.position = { x: centerX - 40, y: centerY - 40 };
       }
     });
 
-    // Distribute peripheral nodes evenly around the central node
-    const otherNodes = updatedNodes.filter((node) => node.id !== centerNodeId);
+    const otherNodes = updatedNodes.filter((n) => n.id !== centerNodeId);
     const count = otherNodes.length;
     otherNodes.forEach((node, index) => {
       const angle = (2 * Math.PI * index) / count;
@@ -171,59 +136,43 @@ export default function Page() {
       };
     });
 
-    // Assign our custom node type to all nodes
     return updatedNodes.map((node) => ({
       ...node,
       type: "starNode",
     }));
   }, [nodesArray, centerNodeId]);
 
-  // -----------------------------------------------------------------
-  // 3. Create edges based on packetFlow data
-  // Each edge connects a source IP to its destination IP.
-  // -----------------------------------------------------------------
-  const edges = useMemo((): Edge[] => {
-    return packetFlow?.map((packet: any, index: any) => ({
-      id: `e-${packet.source_ip}-${packet.destination_ip}-${index}`, // Fix: Wrap in backticks
+  // Create edges based on packetFlow.
+  const edges = useMemo<Edge[]>(() => {
+    return packetFlow.map((packet: any, idx: number) => ({
+      id: `e-${packet.source_ip}-${packet.destination_ip}-${idx}`,
       source: packet.source_ip,
       target: packet.destination_ip,
       animated: true,
       type: "smoothstep",
     }));
-  }, []);
+  }, [packetFlow]);
 
-  // -----------------------------------------------------------------
-  // 4. React Flow state management
-  // -----------------------------------------------------------------
-  const [nodes, setNodes, onNodesChange] = useNodesState(positionedNodes);
-  const [edgesState, setEdges, onEdgesChange] = useEdgesState(edges);
-
-  const onConnect = useCallback(
-    (params: any) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  );
-
-  // -----------------------------------------------------------------
-  // 5. Render the React Flow component
-  // -----------------------------------------------------------------
   return (
-    <div
-      style={{ width: "100%", height: "100vh" }}
-      className="flex justify-center items-center flex-col"
-    >
-      <h1 className="text-3xl font-semibold">Ipv4 Connections</h1>
-      <ReactFlow
-        nodes={nodes}
-        edges={edgesState}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        fitView
-      >
-        <Background color="#aaa" gap={16} />
-        <Controls />
-      </ReactFlow>
+    <div style={{ width: "100%", height: "100vh" }}>
+      <h1 className="text-3xl font-semibold text-center my-4">
+        IPv4 Connections
+      </h1>
+      {packetFlow.length === 0 ? (
+        <div className="flex items-center justify-center h-full">
+          <h2 className="text-xl font-semibold">No data available</h2>
+        </div>
+      ) : (
+        <ReactFlow
+          nodes={positionedNodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          fitView
+        >
+          <Background color="#aaa" gap={16} />
+          <Controls />
+        </ReactFlow>
+      )}
     </div>
   );
 }

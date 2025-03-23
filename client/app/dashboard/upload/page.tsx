@@ -9,6 +9,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import { useState } from "react";
 
@@ -16,7 +18,6 @@ import { useUser } from "@clerk/nextjs";
 
 // state management
 import { useDataStore } from "../../../store/useDataStore";
-import { LayoutDashboard } from "lucide-react";
 
 export default function Component() {
   // Properly type the file state
@@ -26,6 +27,7 @@ export default function Component() {
   const { setLatest } = useDataStore();
 
   const { user } = useUser();
+  const router = useRouter();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -68,11 +70,12 @@ export default function Component() {
       }
 
       const result = await response.json();
-      console.log("Upload successful:", result);LayoutDashboard
+      console.log("Upload successful:", result);
 
       setLatest(result);
 
-      alert("File uploaded successfully!");
+      toast("File uploaded successfully");
+      router.push("/dashboard"); // Redirect to "/dashboard"
     } catch (error: unknown) {
       console.error("Upload error:", error);
       // Properly handle the error with type checking
