@@ -1,5 +1,5 @@
 from pathlib import Path
-from ..pattern_anomalies.crud import detect_mqtt_patterns_anomalies
+from ..pattern_anomalies.crud import detect_network_patterns_anomalies
 from ..pattern_detection.crud import advanced_pattern_detection
 from scapy.all import PacketList
 
@@ -9,7 +9,7 @@ def analyze_network_congestion(file_path: Path, packets: PacketList):
 
     # Get base statistics from existing functions
     base_stats = advanced_pattern_detection(file_path, packets)
-    mqtt_analysis = detect_mqtt_patterns_anomalies(file_path, packets)
+    mqtt_analysis = detect_network_patterns_anomalies(file_path, packets)
 
     # Extract congestion-specific metrics
     congestion_metrics = {
