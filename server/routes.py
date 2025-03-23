@@ -18,7 +18,7 @@ from scapy.all import PcapReader
 from analysis_service.tcp_analysis.analysis import analyze_tcp_window_size
 from analysis_service.network_analysis.crud import analyze_network_congestion
 from analysis_service.pattern_detection.crud import advanced_pattern_detection
-from analysis_service.pattern_anomalies.crud import detect_network_patterns_anomalies
+from analysis_service.pattern_anomalies.crud import detect_network_patterns
 from latency_analysis_service.crud import calculate_average_latency
 from packet_extract_service.crud import extract_and_store_packets_optimized
 from analysis_storage.schema import AnalysisResults
@@ -66,7 +66,7 @@ async def upload_pcapng(
         print("pattern_analysis")
         print(end - start)
         start = time.time()
-        mqtt_analysis = detect_network_patterns_anomalies(file_path, packets)
+        mqtt_analysis = detect_network_patterns(file_path, packets)
         end = time.time()
         print("mqtt")
         print(end - start)
