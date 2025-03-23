@@ -5,7 +5,8 @@ from datetime import datetime
 def create_pcapng_file(db: Session, file_data: schema.PcapngFileCreate):
     new_file = model.PcapngFile(
         filename=file_data.filename,
-        upload_timestamp=datetime.utcnow()
+        upload_timestamp=datetime.utcnow(),
+        user_id=file_data.user_id,
     )
     db.add(new_file)
     db.commit()
@@ -13,8 +14,9 @@ def create_pcapng_file(db: Session, file_data: schema.PcapngFileCreate):
     
     return {
         "id": str(new_file.id),  # ✅ Convert UUID to string
+        "user_id": new_file.user_id,
         "filename": new_file.filename,
-        "upload_timestamp": new_file.upload_timestamp,
+        "upload_timestamp": new_file.upload_timestamp, 
     }
 
 def get_pcapng_files(db: Session):
