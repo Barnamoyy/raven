@@ -99,7 +99,7 @@ async def upload_pcapng(
         delay_analysis=delay_categorization,
     )
 
-    create_analysis_result(db, analysis_results)
+    background_tasks.add_task(create_analysis_result, db, analysis_results)
 
     # Background Task: Store extracted packets in DB
     background_tasks.add_task(

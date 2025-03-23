@@ -3,11 +3,6 @@ from scapy.all import PacketList
 import numpy as np
 
 
-from pathlib import Path
-from scapy.all import PacketList
-import numpy as np
-
-
 def advanced_pattern_detection(file_path: Path, packets: PacketList):
     """Performs advanced pattern detection on network traffic."""
     timestamps = [float(pkt.time) for pkt in packets if hasattr(pkt, "time")]
@@ -65,6 +60,9 @@ def advanced_pattern_detection(file_path: Path, packets: PacketList):
     # Structure to track protocol-based latency
     protocol_latency = {}
 
+    # Track packets by conversation (src IP, dst IP, src port, dst port)
+    conversations = {}
+
     # Process each packet
     for i, pkt in enumerate(packets):
         # Get detailed protocol information for each packet
@@ -92,8 +90,64 @@ def advanced_pattern_detection(file_path: Path, packets: PacketList):
         packet_proto_info["protocol"] = highest_layer
         packet_proto_info["size"] = len(pkt)
 
+        # Extract IP information
+        src_ip = "N/A"
+        dst_ip = "N/A"
+        if pkt.haslayer("IP"):
+            src_ip = pkt["IP"].src
+            dst_ip = pkt["IP"].dst
+        elif pkt.haslayer("IPv6"):
+            src_ip = pkt["IPv6"].src
+            dst_ip = pkt["IPv6"].dst
+
+        packet_proto_info["src_ip"] = src_ip
+        packet_proto_info["dst_ip"] = dst_ip
+
+        # Extract port information
+        src_port = "N/A"
+        dst_port = "N/A"
+        if pkt.haslayer("TCP"):
+            src_port = pkt["TCP"].sport
+            dst_port = pkt["TCP"].dport
+        elif pkt.haslayer("UDP"):
+            src_port = pkt["UDP"].sport
+            dst_port = pkt["UDP"].dport
+
+        packet_proto_info["src_port"] = src_port
+        packet_proto_info["dst_port"] = dst_port
+
+        # Add current timestamp
         if hasattr(pkt, "time"):
             packet_proto_info["timestamp"] = float(pkt.time)
+
+            # Track conversation for delay calculation
+            if highest_layer in ["TCP", "UDP", "HTTP", "TLS/SSL", "DNS"]:
+                # Create a conversation key (a tuple of src/dst IPs and ports)
+                forward_key = (src_ip, dst_ip, src_port, dst_port)
+                reverse_key = (dst_ip, src_ip, dst_port, src_port)
+
+                # For protocols with request/response pattern, we calculate delay
+                # Check if this packet could be a response to a previous packet
+                if reverse_key in conversations:
+                    # This might be a response, calculate delay from the last packet in reverse direction
+                    request_time = conversations[reverse_key]["last_time"]
+                    packet_proto_info["delay"] = float(pkt.time) - request_time
+                else:
+                    # This is a new conversation or a continuing conversation in the same direction
+                    packet_proto_info["delay"] = 0.0
+
+                # Update conversation tracking
+                if forward_key not in conversations:
+                    conversations[forward_key] = {
+                        "packets": 0,
+                        "last_time": float(pkt.time),
+                    }
+                else:
+                    conversations[forward_key]["last_time"] = float(pkt.time)
+                conversations[forward_key]["packets"] += 1
+            else:
+                # For other protocols without clear request/response pattern
+                packet_proto_info["delay"] = 0.0
 
         packet_protocols.append(packet_proto_info)
 
