@@ -22,7 +22,7 @@ from analysis_service.pattern_anomalies.crud import detect_mqtt_patterns_anomali
 from latency_analysis_service.crud import calculate_average_latency
 from packet_extract_service.crud import extract_and_store_packets_optimized
 from analysis_storage.schema import AnalysisResults
-from analysis_storage.crud import create_analysis_result
+from analysis_storage.crud import create_analysis_result, get_analysis_by_pcapng
 import time
 
 router = APIRouter(prefix="/storage", tags=["Storage"])
@@ -100,9 +100,9 @@ async def upload_pcapng(
 
 
 @router.get("/analysis/{pcapng_id}")
-def get_analysis_results(pcapng_id: int, db: Session = Depends(get_db)):
+def get_analysis_results(pcapng_id: str, db: Session = Depends(get_db)):
     """Fetches analysis results for a specific PCAPNG file."""
-    results = crud.get_analysis_by_pcapng(db, pcapng_id)
+    results = get_analysis_by_pcapng(db, pcapng_id)
     if not results:
         raise HTTPException(status_code=404, detail="No analysis results found.")
     return results
