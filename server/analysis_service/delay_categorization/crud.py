@@ -559,10 +559,117 @@ def analyze_packet_delays(file_path, packets):
         # Generate summary
         summary = analyzer.generate_summary()
 
+        # Extract individual packet delays and categorize them
+        packet_delays = []
+        if analyzer.df is not None and not analyzer.df.empty:
+            # Create lookup dictionaries for each delay category
+            bundling_packets = set()
+            retransmission_packets = set()
+            congestion_packets = set()
+            jitter_packets = set()
+            broker_packets = set()
+
+            # Map packets to categories
+            # 1. Bundling delays
+            for event in analyzer.delay_categories["bundling_delay"]:
+                start_time = event["start_time"]
+                end_time = event["end_time"]
+                src_ip = event["src_ip"]
+                # Find packets in this bundling event
+                bundled_packets = analyzer.df[
+                    (analyzer.df["timestamp"] >= start_time)
+                    & (analyzer.df["timestamp"] <= end_time)
+                    & (analyzer.df["src_ip"] == src_ip)
+                ]["packet_id"].tolist()
+                bundling_packets.update(bundled_packets)
+
+            # 2. Retransmission delays
+            for event in analyzer.delay_categories["retransmission_delay"]:
+                orig_time = event["orig_time"]
+                retrans_time = event["retrans_time"]
+                flow = event["flow"]
+                seq_num = event["seq_num"]
+                # Find packets in this retransmission
+                retrans_packets = analyzer.df[
+                    (analyzer.df["timestamp"].between(orig_time, retrans_time))
+                    & (analyzer.df["flow"] == flow)
+                    & (analyzer.df["seq_num"] == seq_num)
+                ]["packet_id"].tolist()
+                retransmission_packets.update(retrans_packets)
+
+            # 3. Network congestion
+            for event in analyzer.delay_categories["network_congestion"]:
+                start_time = event["start_time"]
+                end_time = event["end_time"]
+                # Find packets affected by congestion
+                congestion_affected = analyzer.df[
+                    (analyzer.df["timestamp"] >= start_time)
+                    & (analyzer.df["timestamp"] <= end_time)
+                ]["packet_id"].tolist()
+                congestion_packets.update(congestion_affected)
+
+            # 4. Jitter
+            for event in analyzer.delay_categories["jitter"]:
+                flow = event["flow"]
+                start_time = event["start_time"]
+                end_time = event["end_time"]
+                # Find packets in this flow with jitter
+                jitter_affected = analyzer.df[
+                    (analyzer.df["flow"] == flow)
+                    & (analyzer.df["timestamp"] >= start_time)
+                    & (analyzer.df["timestamp"] <= end_time)
+                ]["packet_id"].tolist()
+                jitter_packets.update(jitter_affected)
+
+            # 5. Broker processing
+            for event in analyzer.delay_categories["broker_processing_delay"]:
+                broker_ip = event["broker_ip"]
+                in_time = event["in_time"]
+                out_time = event["out_time"]
+                # Find packets in this broker processing event
+                broker_affected = analyzer.df[
+                    (
+                        (analyzer.df["src_ip"] == broker_ip)
+                        | (analyzer.df["dst_ip"] == broker_ip)
+                    )
+                    & (analyzer.df["timestamp"] >= in_time)
+                    & (analyzer.df["timestamp"] <= out_time)
+                ]["packet_id"].tolist()
+                broker_packets.update(broker_affected)
+
+            # Create packet delay entries with category
+            for idx, row in analyzer.df.iterrows():
+                packet_id = row["packet_id"]
+
+                # Determine delay categories
+                categories = []
+                if packet_id in bundling_packets:
+                    categories.append("bundling_delay")
+                if packet_id in retransmission_packets:
+                    categories.append("retransmission_delay")
+                if packet_id in congestion_packets:
+                    categories.append("network_congestion")
+                if packet_id in jitter_packets:
+                    categories.append("jitter")
+                if packet_id in broker_packets:
+                    categories.append("broker_processing_delay")
+
+                if not categories:
+                    categories.append("normal")
+
+                packet_delays.append(
+                    {
+                        "packet_index": packet_id,
+                        "timestamp": row["timestamp"],
+                        "delay": row["delay"],
+                        "category": categories,
+                    }
+                )
+
         # Combine results
         results = {
             "summary": summary,
-            "delay_categories": {k: v for k, v in analyzer.delay_categories.items()},
+            "packet_delays": packet_delays,
         }
 
         return results
