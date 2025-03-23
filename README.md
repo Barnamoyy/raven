@@ -17,7 +17,6 @@
 - [Limitations](#limitations)
 - [Future Optimizations](#future-optimizations)
 - [Team Members](#team-members)
-- [License](#license)
 
 ---
 
@@ -285,15 +284,7 @@ For the backend, environment variables are stored in a `.env` file. The critical
 
 Contributions are welcome! Please fork the repository and open a pull request with your changes.
 
-## License
 
-This project is licensed under the MIT License.
-
----
-
-This README covers all necessary steps from setup to execution for the frontend, backend, and database, making it easier for others to understand and run your hackathon project. Feel free to adjust any sections as needed.
-
----
 
 ## Limitations
 - **Single Point of Failure**: Only one backend API server is running.
