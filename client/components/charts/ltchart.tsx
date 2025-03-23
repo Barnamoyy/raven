@@ -14,7 +14,7 @@ import {
   TabsContent,
 } from '@/components/ui/tabs';
 
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
+import { Doughnut, Pie, Line } from 'react-chartjs-2';
 import {
   Chart,
   ArcElement,
@@ -77,7 +77,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ analysisResults }) => {
   // -------------------------------
-  // 1. Congestion Analysis Chart
+  // 1. Congestion Analysis Chart (Doughnut)
   // -------------------------------
   const congestionData = {
     labels: ['Congestion Score', 'Remaining'],
@@ -93,7 +93,7 @@ const Dashboard: React.FC<DashboardProps> = ({ analysisResults }) => {
   };
 
   // -------------------------------
-  // 2. Delay Categorization Chart
+  // 2. Delay Categorization Chart (Doughnut)
   // -------------------------------
   const delayLabels = Object.keys(
     analysisResults.delay_categorization.summary
@@ -112,21 +112,20 @@ const Dashboard: React.FC<DashboardProps> = ({ analysisResults }) => {
   };
 
   // -------------------------------
-  // 3. MQTT Analysis Chart (Bar Chart)
+  // 3. Protocol Distribution Chart (Pie Chart)
   // -------------------------------
-  const mqttLabels = Object.keys(
+  const protocolLabels = Object.keys(
     analysisResults.mqtt_analysis.protocol_distribution
   );
-  const mqttValues = Object.values(
+  const protocolValues = Object.values(
     analysisResults.mqtt_analysis.protocol_distribution
   );
-  const mqttData = {
-    labels: mqttLabels,
+  const protocolData = {
+    labels: protocolLabels,
     datasets: [
       {
-        label: 'Protocol Distribution',
-        data: mqttValues,
-        backgroundColor: '#60A5FA',
+        data: protocolValues,
+        backgroundColor: ['#60A5FA', '#FBBF24', '#F87171', '#34D399', '#A78BFA'],
       },
     ],
   };
@@ -136,9 +135,9 @@ const Dashboard: React.FC<DashboardProps> = ({ analysisResults }) => {
   // -------------------------------
   const packetFlow = analysisResults.congestion_analysis.packet_flow || [];
   
-  const latencyTrendLabels = packetFlow.map((packet, index) => {
-    return packet.timestamp ? new Date(packet.timestamp).toLocaleTimeString() : `Packet ${index + 1}`;
-  });
+  const latencyTrendLabels = packetFlow.map((packet, index) =>
+    packet.timestamp ? new Date(packet.timestamp).toLocaleTimeString() : `Packet ${index + 1}`
+  );
 
   const latencyTrendValues = packetFlow.map(packet =>
     packet.latency ?? analysisResults.avg_latency
@@ -152,7 +151,7 @@ const Dashboard: React.FC<DashboardProps> = ({ analysisResults }) => {
         data: latencyTrendValues,
         borderColor: '#34D399',
         fill: false,
-        tension: 0.2,
+        tension: 0.4, // Increased tension for a more curved line
       },
     ],
   };
@@ -165,19 +164,18 @@ const Dashboard: React.FC<DashboardProps> = ({ analysisResults }) => {
 
   // Container style for reduced chart size
   const chartContainerStyle: React.CSSProperties = {
-    height: '300px', // Adjust height as needed
+    height: '300px',
     width: '100%',
     position: 'relative',
   };
 
   return (
     <div className="p-4 space-y-6">
-
       <Tabs defaultValue="congestion" className="w-full">
         <TabsList>
           <TabsTrigger value="congestion">Congestion</TabsTrigger>
           <TabsTrigger value="delay">Delay Categorization</TabsTrigger>
-          <TabsTrigger value="mqtt">MQTT Analysis</TabsTrigger>
+          <TabsTrigger value="protocol">Protocol Distribution</TabsTrigger>
           <TabsTrigger value="latency">Latency Trend</TabsTrigger>
         </TabsList>
 
@@ -212,15 +210,15 @@ const Dashboard: React.FC<DashboardProps> = ({ analysisResults }) => {
           </Card>
         </TabsContent>
 
-        {/* MQTT Analysis Tab */}
-        <TabsContent value="mqtt">
+        {/* Protocol Distribution Tab */}
+        <TabsContent value="protocol">
           <Card>
             <CardHeader>
-              <CardTitle>MQTT Analysis</CardTitle>
+              <CardTitle>Protocol Distribution</CardTitle>
             </CardHeader>
             <CardContent>
               <div style={chartContainerStyle}>
-                <Bar data={mqttData} options={chartOptions} />
+                <Pie data={protocolData} options={chartOptions} />
               </div>
               <p className="mt-2">
                 Total Packet Count: <strong>{analysisResults.mqtt_analysis.packet_count}</strong>
