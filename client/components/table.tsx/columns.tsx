@@ -7,37 +7,37 @@ import { DataTableColumnHeader } from "./data-table-column-header"
 
 export const packetColumns: ColumnDef<Packet>[] = [
   {
-    accessorKey: "packetNumber",
+    accessorKey: "packet_id",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Packet Number" />,
-    cell: ({ row }) => <div className="font-medium">{row.getValue("packetNumber")}</div>,
+    cell: ({ row }) => <div className="font-medium">{row.getValue("packet_id")}</div>,
     enableSorting: true,
     enableHiding: true,
   },
   {
-    accessorKey: "sourceIp",
+    accessorKey: "src_ip",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Source IP" />,
-    cell: ({ row }) => <div>{row.getValue("sourceIp")}</div>,
+    cell: ({ row }) => <div>{row.getValue("src_ip")}</div>,
     enableSorting: true,
     enableHiding: true,
   },
   {
-    accessorKey: "destinationIp",
+    accessorKey: "dst_ip",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Destination IP" />,
-    cell: ({ row }) => <div>{row.getValue("destinationIp")}</div>,
+    cell: ({ row }) => <div>{row.getValue("dst_ip")}</div>,
     enableSorting: true,
     enableHiding: true,
   },
   {
-    accessorKey: "port",
+    accessorKey: "dst_port",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Port" />,
-    cell: ({ row }) => <div>{row.getValue("port")}</div>,
+    cell: ({ row }) => <div>{row.getValue("dst_port")}</div>,
     enableSorting: true,
     enableHiding: true,
   },
   {
-    accessorKey: "packetSize",
+    accessorKey: "size",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Packet Size" />,
-    cell: ({ row }) => <div>{row.getValue("packetSize")} bytes</div>,
+    cell: ({ row }) => <div>{row.getValue("size")} bytes</div>,
     enableSorting: true,
     enableHiding: true,
   },
@@ -55,12 +55,24 @@ export const packetColumns: ColumnDef<Packet>[] = [
     },
   },
   {
-    accessorKey: "delay",
+    accessorKey: "packet_type",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Delay" />,
-    cell: ({ row }) => row.getValue("delay") as string,
+    cell: ({ row }) => {
+      const packetType = row.getValue("packet_type") as Record<string, boolean>;
+  
+      if (!packetType) return <div>No Data</div>; // Handle missing data
+  
+      // Filter out the true values and join them into a string
+      const activeDelays = Object.keys(packetType)
+        .filter((key) => packetType[key])
+        .join(", ");
+  
+      return <div>{activeDelays || "No Delays"}</div>;
+    },
     enableSorting: true,
     enableHiding: true,
-  },
+  }
+  
 ]
 
 function getProtocolVariant(protocol: string): "default" | "secondary" | "destructive" | "outline" {
@@ -75,4 +87,5 @@ function getProtocolVariant(protocol: string): "default" | "secondary" | "destru
       return "outline"
   }
 }
+
 

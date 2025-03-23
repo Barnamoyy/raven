@@ -15,6 +15,7 @@ import { useUser } from "@clerk/nextjs";
 
 // state management 
 import {useDataStore} from "../../../store/useDataStore"
+import { LayoutDashboard } from "lucide-react";
 
 export default function Component() {
   // Properly type the file state
@@ -67,7 +68,7 @@ export default function Component() {
       }
 
       const result = await response.json();
-      console.log("Upload successful:", result);
+      console.log("Upload successful:", result);LayoutDashboard
 
       setLatest(result)
 
