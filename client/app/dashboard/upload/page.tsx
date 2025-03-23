@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 /**
  * v0 by Vercel.
@@ -9,22 +10,21 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useUser } from "@clerk/nextjs";
 
-// state management 
-import {useDataStore} from "../../../store/useDataStore"
+// state management
+import { useDataStore } from "../../../store/useDataStore";
 
 export default function Component() {
   // Properly type the file state
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const {setLatest} = useDataStore()
+  const { setLatest } = useDataStore();
 
   const { user } = useUser();
-
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -45,10 +45,10 @@ export default function Component() {
 
     const formData = new FormData();
     formData.append("file", file);
-    
+
     // The backend is expecting user_id, but it's not being properly included in the request
     formData.append("user_id", user.id);
-    
+
     console.log("User ID being sent:", user.id);
     console.log("File being sent:", file.name);
 
@@ -69,11 +69,9 @@ export default function Component() {
       const result = await response.json();
       console.log("Upload successful:", result);
 
-      setLatest(result)
+      setLatest(result);
 
       alert("File uploaded successfully!");
-
-
     } catch (error: unknown) {
       console.error("Upload error:", error);
       // Properly handle the error with type checking
@@ -96,9 +94,7 @@ export default function Component() {
             <span className="text-sm font-medium text-gray-500">
               Drag and drop a file or click to browse
             </span>
-            <span className="text-xs text-gray-500">
-              .pcapng files only
-            </span>
+            <span className="text-xs text-gray-500">.pcapng files only</span>
           </div>
           <div className="space-y-2 text-sm">
             <Label htmlFor="file" className="text-sm font-medium">
