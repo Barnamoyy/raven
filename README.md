@@ -110,41 +110,188 @@ The system architecture is designed for scalability and efficiency:
 - Redis installed and running
 
 ### Steps
-1. **Clone the repository**:
+
+**Note** Please do not use this on BITS WIFI the database connection 
+
+Below is an example of a structured README.md file in Markdown for your hackathon project:
+
+---
+
+# Hackathon Project
+
+This project consists of three main parts:
+## Overview
+
+This project is a hackathon submission that integrates a modern Next.js frontend, a Python backend, and a PostgreSQL database hosted on AWS RDS. The frontend communicates with the backend through API endpoints, while the backend interacts with the PostgreSQL database to manage data.
+
+## Architecture
+
+- **Frontend:**  
+  Uses Next.js to render dynamic web pages and provide a smooth user experience.
+
+- **Backend:**  
+  A Python server that handles business logic and API endpoints. All required dependencies are listed in a `requirements.txt` file.
+
+- **Database:**  
+  AWS RDS PostgreSQL database accessed via standard SQL queries. Use a client like Postico for administration and manual query execution if needed.
+
+## Prerequisites
+
+- **Node.js & npm:**  
+  [Download and install Node.js](https://nodejs.org/)
+
+- **Python 3:**  
+  Ensure Python 3 is installed on your system.
+
+- **PostgreSQL Client:**  
+  For example, [Postico](https://eggerapps.at/postico/) or any preferred client.
+
+- **AWS RDS Setup:**  
+  Ensure your AWS RDS instance is running and accessible.
+
+## Installation
+
+### Frontend Setup (Next.js)
+
+1. **Clone the repository:**
+
    ```bash
-   git clone https://github.com/your-username/raven.git
+   git clone <your-repo-url>
+   cd <your-repo-folder>/frontend
    ```
-2. **Navigate to the project directory**:
+
+2. **Install dependencies:**
+
    ```bash
-   cd raven
-   ```
-3. **Install frontend dependencies**:
-   ```bash
-   cd client
    npm install
    ```
-4. **Install backend dependencies**:
+
+3. **Start the development server:**
+
    ```bash
-   cd ../server
+   npm run dev
+   ```
+
+   The frontend server should now be running at [http://localhost:3000](http://localhost:3000).
+
+### Backend Setup (Python)
+
+1. **Navigate to the backend directory:**
+
+   ```bash
+   cd <your-repo-folder>/backend
+   ```
+
+2. **Set up a virtual environment (optional but recommended):**
+
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+   ```
+
+3. **Install dependencies:**
+
+   ```bash
    pip install -r requirements.txt
    ```
-5. **Set up environment variables**:
-   Create a `.env` file in the `server` directory and add the following:
+
+4. **Create a `.env` file:**
+
+   Create a file named `.env` in the backend directory with the following content:
+
+   ```ini
+   DATABASE_URL=postgresql://<username>:<password>@<your-aws-rds-endpoint>:<port>/<database_name>
    ```
-   DATABASE_URL=postgresql://user:password@localhost:5432/dbname
-   REDIS_URL=redis://localhost:6379
-   ```
-6. **Run the backend server**:
+
+5. **Start the backend server:**
+
    ```bash
-   python main.py
+   python3 main.py
    ```
-7. **Run the frontend**:
+
+### Database Setup (AWS RDS & PostgreSQL)
+
+- Ensure your AWS RDS PostgreSQL instance is running.
+- Use a PostgreSQL client (like Postico) to connect using the credentials provided in your `.env` file.
+- Run the necessary SQL queries to set up tables and seed initial data. If you have an automated script or migration tool (e.g., Alembic, Flyway, or a custom script), run that to generate the required schema.
+
+  **Example SQL Setup (if done manually):**
+
+  ```sql
+  CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(50) UNIQUE NOT NULL,
+      email VARCHAR(100) UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS posts (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      title VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+  ```
+
+  > **Note:** If your project uses a migration tool, follow the tool's documentation to run migrations.
+
+## Usage
+
+### Running the Frontend
+
+1. Navigate to the frontend directory.
+2. Run:
+
    ```bash
-   cd ../client
-   npm start
+   npm run dev
    ```
-8. **Access the application**:
-   Open your browser and go to `http://localhost:3000`.
+
+3. Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
+
+### Running the Backend
+
+1. Navigate to the backend directory.
+2. Activate your virtual environment (if using one).
+3. Run:
+
+   ```bash
+   python3 main.py
+   ```
+
+## Database Queries
+
+The backend may run queries automatically using an ORM or raw SQL scripts. If you need to manually run queries, you can use the provided SQL examples in the [Database Setup](#database-setup-aws-rds--postgresql) section. Some common queries include:
+
+- **Select all users:**
+
+  ```sql
+  SELECT * FROM users;
+  ```
+
+- **Select posts for a user:**
+
+  ```sql
+  SELECT * FROM posts WHERE user_id = <user_id>;
+  ```
+
+## Environment Variables
+
+For the backend, environment variables are stored in a `.env` file. The critical variable is:
+
+- `DATABASE_URL`: Your PostgreSQL connection string.
+
+## Contributing
+
+Contributions are welcome! Please fork the repository and open a pull request with your changes.
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+This README covers all necessary steps from setup to execution for the frontend, backend, and database, making it easier for others to understand and run your hackathon project. Feel free to adjust any sections as needed.
 
 ---
 
