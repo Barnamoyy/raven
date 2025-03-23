@@ -9,15 +9,22 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useUser } from "@clerk/nextjs";
+
+// state management 
+import {useDataStore} from "../../../store/useDataStore"
 
 export default function Component() {
   // Properly type the file state
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  const {setLatest} = useDataStore()
+
   const { user } = useUser();
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -61,7 +68,12 @@ export default function Component() {
 
       const result = await response.json();
       console.log("Upload successful:", result);
+
+      setLatest(result)
+
       alert("File uploaded successfully!");
+
+
     } catch (error: unknown) {
       console.error("Upload error:", error);
       // Properly handle the error with type checking
