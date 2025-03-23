@@ -55,12 +55,18 @@ def analyze_network_congestion(file_path: Path, packets: PacketList):
     # Create packet_flow list for individual packet flow information
     packet_flow = []
 
+    # Track previous timestamp to calculate delays
+    prev_timestamp = None
+    flow_timestamps = {}  # Track timestamps by flow
+
     for i, pkt in enumerate(packets):
         flow_info = {"packet_id": i, "size": len(pkt)}
 
         # Add timestamp if available
+        current_timestamp = None
         if hasattr(pkt, "time"):
-            flow_info["timestamp"] = float(pkt.time)
+            current_timestamp = float(pkt.time)
+            flow_info["timestamp"] = current_timestamp
 
         # Check for IP layer
         if pkt.haslayer("IP"):
@@ -95,6 +101,26 @@ def analyze_network_congestion(file_path: Path, packets: PacketList):
             flow_info["protocol"] = "Other"
             flow_info["flow"] = f"Unknown flow (packet {i})"
 
+        # Calculate delay information
+        if current_timestamp is not None:
+            # Global delay (from first packet)
+            if prev_timestamp is not None:
+                flow_info["delay_from_previous_ms"] = (
+                    current_timestamp - prev_timestamp
+                ) * 1000
+
+            # Flow-specific delay
+            if "flow" in flow_info:
+                flow_key = flow_info["flow"]
+                if flow_key in flow_timestamps:
+                    flow_info["flow_delay_ms"] = (
+                        current_timestamp - flow_timestamps[flow_key]
+                    ) * 1000
+                flow_timestamps[flow_key] = current_timestamp
+
+            # Update previous timestamp for next iteration
+            prev_timestamp = current_timestamp
+
         # Add to packet_flow list
         packet_flow.append(flow_info)
 
@@ -111,10 +137,25 @@ def analyze_network_congestion(file_path: Path, packets: PacketList):
                     "protocol": flow_info.get("protocol", "Unknown"),
                     "packet_count": 0,
                     "bytes": 0,
+                    "avg_delay_ms": 0,
+                    "total_delay_ms": 0,
                 }
 
             ip_communication[key]["packet_count"] += 1
             ip_communication[key]["bytes"] += len(pkt)
+
+            # Update delay statistics for the flow
+            if "flow_delay_ms" in flow_info:
+                current_delay = flow_info["flow_delay_ms"]
+                current_count = ip_communication[key]["packet_count"]
+
+                # Update running average of delay
+                ip_communication[key]["total_delay_ms"] += current_delay
+                ip_communication[key]["avg_delay_ms"] = (
+                    ip_communication[key]["total_delay_ms"] / (current_count - 1)
+                    if current_count > 1
+                    else 0
+                )
 
     return {
         "congestion_metrics": congestion_metrics,

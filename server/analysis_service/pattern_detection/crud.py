@@ -203,5 +203,4 @@ def advanced_pattern_detection(file_path: Path, packets: PacketList):
     return {
         "statistics": stats,
         "protocol_distribution": protocol_stats,
-        "packet_protocols": packet_protocols,
     }
