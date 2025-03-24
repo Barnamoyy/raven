@@ -110,7 +110,7 @@ The system architecture is designed for scalability and efficiency:
 
 ### Steps
 
-**Note** Please do not use this on BITS WIFI the database connection 
+**Note** Please do not use this on BITS WIFI the database won't connect 
 
 Below is an example of a structured README.md file in Markdown for your hackathon project:
 
