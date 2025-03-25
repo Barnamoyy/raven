@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Pie, Bar } from "react-chartjs-2";
+import { Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -25,7 +25,7 @@ interface DelayAnalysisProps {
 
 const DelayAnalysis: React.FC<DelayAnalysisProps> = ({ responseData }) => {
   const [pieData, setPieData] = useState<any>({});
-  const [barData, setBarData] = useState<any>({});
+  const [setBarData] = useState<any>({});
 
   useEffect(() => {
     // Ensure responseData exists and contains delay categorization information

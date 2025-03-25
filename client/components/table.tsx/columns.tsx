@@ -1,7 +1,6 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Badge } from "@/components/ui/badge"
 import type { Packet } from "@/components/data/packets"
 import { DataTableColumnHeader } from "./data-table-column-header"
 
@@ -74,18 +73,5 @@ export const packetColumns: ColumnDef<Packet>[] = [
   }
   
 ]
-
-function getProtocolVariant(protocol: string): "default" | "secondary" | "destructive" | "outline" {
-  switch (protocol.toLowerCase()) {
-    case "tcp":
-      return "default"
-    case "udp":
-      return "secondary"
-    case "icmp":
-      return "destructive"
-    default:
-      return "outline"
-  }
-}
 
 
