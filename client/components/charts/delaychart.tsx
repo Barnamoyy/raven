@@ -25,7 +25,7 @@ interface DelayAnalysisProps {
 
 const DelayAnalysis: React.FC<DelayAnalysisProps> = ({ responseData }) => {
   const [pieData, setPieData] = useState<any>({});
-  const [setBarData] = useState<any>({});
+  const [barData, setBarData] = useState<any>({});
 
   useEffect(() => {
     // Ensure responseData exists and contains delay categorization information
